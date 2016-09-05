@@ -23,9 +23,7 @@
 #define SOC_BUFFERSIZE  0x100000
 
 void textPrint(std::string givenString, const char* InputCChar, std::vector<std::string> passedStringVector) {
-
     //30 total lines (from 0 to 29)
-
 
     printf("\x1b[1;0H%s %d", givenString.c_str(), strlen(InputCChar));
     printf("\x1b[2;0HInput :");
@@ -66,12 +64,14 @@ int main()
 
 	if(SOC_buffer == NULL) {
         gfxExit();
+        socExit();
         return 0;
 	}
 
 	// Now intialise soc:u service
 	if ((ret = socInit(SOC_buffer, SOC_BUFFERSIZE)) != 0) {
         gfxExit();
+        socExit();
         return 0;
 	}
 
@@ -79,21 +79,23 @@ int main()
 
 	if(sock == -1) {
         gfxExit();
+        socExit();
         return 0;
 	}
 
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(8080);
 	server_addr.sin_addr.s_addr = inet_addr("192.168.1.156");
-	//bzero(&(server_addr.sin_zero), 8);
 
 	if(connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         gfxExit();
+        socExit();
         return 0;
 	}
 
 	if(fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK) == -1) {
         gfxExit();
+        socExit();
         return 0;
 	}
 
@@ -111,15 +113,9 @@ int main()
 
 		//Your code goes here
         ret = recv(sock, recv_data, sizeof(recv_data), 0);
-/*
-        if(strcmp(recv_data, recv_data_holder) == 0 && strlen(recv_data) != 0) {
-            memset(&recv_data[0], 0, sizeof(recv_data));
-            memset(&recv_data_holder[0], 0, sizeof(recv_data_holder));
-        } else
-*/
+
          if(strlen(recv_data) > 0){
             consoleClear();
-//            strcpy(recv_data_holder, recv_data);
             numberOfChatMessages++;
 
             if(numberOfChatMessages > 23) {
@@ -127,8 +123,6 @@ int main()
                 numberOfChatMessages = 0;
                 chatMessages.push_back(recv_data);
                 memset(&recv_data[0], 0, sizeof(recv_data));
-
-
             } else {
                 chatMessages.push_back(recv_data);
                 memset(&recv_data[0], 0, sizeof(recv_data));
@@ -195,5 +189,6 @@ int main()
 	}
 
 	gfxExit();
+	socExit();
 	return 0;
 }
